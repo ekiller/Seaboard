@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".Main">
+    <item
+        android:id="@+id/selectStation"
+        android:title="@string/selectStations_settings"
+        android:orderInCategory="100"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/selectUnit"
+        android:title="@string/selectUnit_settings"
+        android:orderInCategory="200"/>
+
+
+</menu>
