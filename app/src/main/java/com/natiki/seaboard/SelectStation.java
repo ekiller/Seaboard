@@ -17,7 +17,7 @@ public class SelectStation extends Activity {
         //TODO: change it to return City name and ID to Main activitiy
         //return intent
         Intent intent = new Intent();
-        intent.putExtra("name",etName.getText().toString());
+        intent.putExtra("name",TEXT.getText().toString());
         setResult(RESULT_OK, intent);
         finish();
     }
