@@ -1,6 +1,7 @@
 package com.natiki.seaboard;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,6 +13,13 @@ public class SelectStation extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_station);
+
+        //TODO: change it to return City name and ID to Main activitiy
+        //return intent
+        Intent intent = new Intent();
+        intent.putExtra("name",etName.getText().toString());
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
 
