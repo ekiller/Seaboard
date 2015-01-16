@@ -6,20 +6,28 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class Main extends Activity {
+public class Main extends Activity implements View.OnClickListener{
 
     //View
     TextView stationName;
     TextView stationID;
+    Button btnSettings;
 
     //Preferences
     final String STATION_ID = "id";
     final String STATION_NAME = "name";
     SharedPreferences sPref;
+
+    String stID ="ID";
+    String stName ="NAME";
+
+   // Station station = new Station();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +36,11 @@ public class Main extends Activity {
 
         stationName = (TextView) findViewById(R.id.stationName);
         stationID = (TextView) findViewById(R.id.stationID);
+        btnSettings = (Button) findViewById(R.id.btnSettings);
+
+        btnSettings.setOnClickListener(this);
+
+        loadText();
 
     }
 
@@ -54,12 +67,12 @@ public class Main extends Activity {
 
         return super.onOptionsItemSelected(item);
     }
-}
 
     private void saveText() {
         sPref = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor ed = sPref.edit();
-        ed.putString(STATION_ID, "");
+        ed.putString(STATION_ID, stID);
+        ed.putString(STATION_NAME, stName);
         ed.commit();
         Toast.makeText(this, "Station saved", Toast.LENGTH_SHORT).show();
     }
@@ -67,14 +80,31 @@ public class Main extends Activity {
 
     private void loadText() {
         sPref = getPreferences(MODE_PRIVATE);
-        String savedText = sPref.getString(STATION_ID, "");
-        stationName.setText(savedText);
+        String savedId = sPref.getString(STATION_ID, "");
+        String savedName = sPref.getString(STATION_NAME, "");
+        stationName.setText(savedId);
+        stationID.setText(savedName);
         Toast.makeText(this, "Station Loaded", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (data == null) {return;}
-        String name = data.getStringExtra("name");
+        stID = data.getStringExtra("name");
+
+        stName = data.getStringExtra("id");
 
     }
+
+    @Override
+    public void onClick(View v) {
+        Intent intent = new Intent(this, SelectStation.class);
+        startActivityForResult(intent, 1);
+    }
+
+    @Override
+    protected void onDestroy() {
+        saveText();
+        super.onDestroy();
+    }
+}

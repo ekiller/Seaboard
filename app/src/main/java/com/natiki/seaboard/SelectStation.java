@@ -1,47 +1,180 @@
 package com.natiki.seaboard;
 
 import android.app.Activity;
+import android.app.ListActivity;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 
 
-public class SelectStation extends Activity {
+public class SelectStation extends ListActivity {
+
+    // All static variables
+    static final String URL = "http://opendap.co-ops.nos.noaa.gov/stations/stationsXML.jsp";
+    // XML node keys
+    static final String KEY_STATION = "station"; // parent node
+    static final String KEY_ID = "id";
+    static final String KEY_NAME = "name";
+    static final String KEY_LAT = "lat";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_station);
 
-        //TODO: change it to return City name and ID to Main activitiy
-        //return intent
-        Intent intent = new Intent();
-        intent.putExtra("name",TEXT.getText().toString());
-        setResult(RESULT_OK, intent);
-        finish();
+
+        // get xml data
+        new GetXMLAsyncTask().execute();
+
+        // selecting single ListView item
+        ListView lv = getListView();
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView parent, View view, int position, long id) {
+// getting values from selected ListItem
+                String name = ((TextView)view.findViewById(R.id.name)).getText().toString();
+                String idi = ((TextView)view.findViewById(R.id.ID)).getText().toString();
+
+// Return Intent
+                Intent in = new Intent();
+                in.putExtra(KEY_NAME, name);
+                in.putExtra(KEY_ID, idi);
+                setResult(RESULT_OK, in);
+                finish();
+            }
+        });
+
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_select_station, menu);
-        return true;
+
+    private class GetXMLAsyncTask extends AsyncTask<Void, Void, String> {
+    private ArrayList<HashMap<String, String>> menuItems = null;
+
+    private XMLParser parser = null;
+
+    public GetXMLAsyncTask() {
+        super();
+        menuItems = new ArrayList<HashMap<String, String>>();
+        parser = new XMLParser();
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    protected void onPostExecute(String xml) {
+        super.onPostExecute(xml);
+        String tst = null;
+        String tct = null;
+        if (null != xml) {
+            Document doc = parser.getDomElement(xml);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+            NodeList nl = doc.getElementsByTagName(KEY_STATION);
+
+// looping through all item nodes <station>
+            for (int i = 0; i < nl.getLength(); i++) {
+// creating new HashMap
+                HashMap<String, String> map = new HashMap<String, String>();
+                Element e = (Element) nl.item(i);
+
+                NamedNodeMap attrs = e.getAttributes();
+
+                Node stName = attrs.item(0);
+                Node stID = attrs.item(1);
+                tst = stName.getNodeValue();
+                tct = stID.getNodeValue();
+
+
+
+                map.put(KEY_NAME, tst);
+                map.put(KEY_ID, tct);
+
+                map.put(KEY_LAT, parser.getValue(e, KEY_LAT));
+
+
+
+
+                menuItems.add(map);
+
+
+
+// adding each child node to HashMap key => value
+
+            }
+
+            Collections.sort(menuItems, new MapComparator(KEY_NAME));
+
+
+
+
+// Adding menuItems to ListView
+            final ListAdapter adapter = new SimpleAdapter(SelectStation.this, menuItems
+                    , R.layout.list_items, new String[] { KEY_NAME, KEY_ID, KEY_LAT }
+                    , new int[]{R.id.name, R.id.ID, R.id.lat});
+
+
+            // updating listview
+            setListAdapter(adapter);
+
+
+            EditText inputSearch = (EditText) findViewById(R.id.search);
+
+            inputSearch.addTextChangedListener(new TextWatcher() {
+
+                @Override
+                public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
+                    // When user changed the Text
+
+                    ((SimpleAdapter)adapter).getFilter().filter(arg0);
+                    // ((SimpleAdapter)AndroidXMLParsingActivity.this.getListAdapter()).getFilter().filter(cs);
+
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence arg0, int arg1, int arg2,
+                                              int arg3) {
+                    // TODO Auto-generated method stub
+
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable arg0) {
+                    // TODO Auto-generated method stub
+
+                    //((SimpleAdapter)adapter).getFilter().filter(arg0);
+
+                }
+            });
+
+
         }
-
-        return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected String doInBackground(Void... params) {
+        return parser.getXmlFromUrl(URL); // getting XML
+    }
+}
+
 }
