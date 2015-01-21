@@ -71,10 +71,12 @@ public class Main extends Activity implements View.OnClickListener{
     private void saveText() {
         sPref = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor ed = sPref.edit();
+        if (stName != null) {
         ed.putString(STATION_ID, stID);
         ed.putString(STATION_NAME, stName);
         ed.commit();
-        Toast.makeText(this, "Station saved", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Station saved", Toast.LENGTH_SHORT).show();}
+        else stName = "Station Name";
     }
 
 
@@ -93,6 +95,10 @@ public class Main extends Activity implements View.OnClickListener{
         stID = data.getStringExtra("name");
 
         stName = data.getStringExtra("id");
+
+        stationName.setText(stName);
+        stationID.setText(stID);
+        saveText();
 
     }
 
